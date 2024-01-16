@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,12 +31,24 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late List<CameraDescription> cameras;
+  late CameraController controller;
+  late Future<void> cameraSetupFuture;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    cameraSetupFuture = setupCamera();
+  }
+
+  Future<void> setupCamera() async {
+    print("called setup camera");
+    cameras = await availableCameras();
+    print("available cameras: ${cameras.length}");
+    controller = CameraController(cameras[1], ResolutionPreset.max);
+    await controller.initialize();
+    print(controller.cameraId);
+    return;
   }
 
   @override
@@ -46,22 +59,19 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: FutureBuilder<void>(
+          future: cameraSetupFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(controller);
+            } else {
+              return const CircularProgressIndicator();
+            }
+          }
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: () {  },
         child: const Icon(Icons.add),
       ),
     );
