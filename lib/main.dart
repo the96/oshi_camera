@@ -1,79 +1,46 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:oshi_camera/view/camera.dart';
+import 'package:oshi_camera/view/component/camera_controller.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const OshiCamera());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class OshiCamera extends StatelessWidget {
+  const OshiCamera({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Oshi Camera',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      initialRoute: '/',
+      onGenerateRoute: Router.generateRoute,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  late List<CameraDescription> cameras;
-  late CameraController controller;
-  late Future<void> cameraSetupFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    cameraSetupFuture = setupCamera();
-  }
-
-  Future<void> setupCamera() async {
-    print("called setup camera");
-    cameras = await availableCameras();
-    print("available cameras: ${cameras.length}");
-    controller = CameraController(cameras[1], ResolutionPreset.max);
-    await controller.initialize();
-    print(controller.cameraId);
-    return;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: FutureBuilder<void>(
-          future: cameraSetupFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return CameraPreview(controller);
-            } else {
-              return const CircularProgressIndicator();
-            }
-          }
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {  },
-        child: const Icon(Icons.add),
-      ),
-    );
+class Router {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    // final args = settings.arguments;
+    switch (settings.name) {
+      case '/':
+      default:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => Camera(
+            children: [
+              CameraController(
+                pressOptions: Future<void>.value(),
+                pressShutter: Future<void>.value(),
+                pressSwitchCamera: Future<void>.value(),
+              ),
+            ],
+          ),
+        );
+    }
   }
 }
