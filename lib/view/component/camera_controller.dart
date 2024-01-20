@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CameraController extends StatelessWidget {
-  final Future<void> pressOptions;
-  final Future<void> pressShutter;
-  final Future<void> pressSwitchCamera;
+class CameraController extends ConsumerStatefulWidget {
+  final Function pressOptions;
+  final Function pressShutter;
+  final Function pressSwitchCamera;
   const CameraController({
     super.key,
     required this.pressOptions,
     required this.pressShutter,
     required this.pressSwitchCamera,
   });
+
+  @override
+  ConsumerState<CameraController> createState() => _CameraControllerState();
+}
+
+class _CameraControllerState extends ConsumerState<CameraController> {
+  bool enableShutter = true;
 
   @override
   Widget build(BuildContext context) {
@@ -23,23 +31,32 @@ class CameraController extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  pressOptions.then((_) => {});
+                  widget.pressOptions().then((_) => {});
                 },
                 iconSize: 32,
                 icon: const Icon(Icons.apps),
                 color: Colors.white,
               ),
               IconButton(
-                onPressed: () {
-                  pressShutter.then((_) => {});
-                },
+                onPressed: enableShutter
+                    ? () {
+                        setState(() {
+                          enableShutter = false;
+                        });
+                        widget.pressShutter(ref).then(
+                          (_) {
+                            setState(() => enableShutter = true);
+                          },
+                        );
+                      }
+                    : null,
                 iconSize: 48,
                 icon: const Icon(Icons.camera),
                 color: Colors.white,
               ),
               IconButton(
                 onPressed: () {
-                  pressSwitchCamera.then((_) => {});
+                  widget.pressSwitchCamera().then((_) => {});
                 },
                 iconSize: 32,
                 icon: const Icon(Icons.cameraswitch_outlined),

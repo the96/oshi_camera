@@ -46,8 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>your usage description here</string>
+	<string>taking photo</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>your usage description here</string>
+	<string>required by camera library</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>saving image</string>
 </dict>
 </plist>
