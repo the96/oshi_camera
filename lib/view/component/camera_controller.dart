@@ -31,7 +31,7 @@ class _CameraControllerState extends ConsumerState<CameraController> {
             children: [
               IconButton(
                 onPressed: () {
-                  widget.pressOptions().then((_) => {});
+                  widget.pressOptions(ref).then((_) => {});
                 },
                 iconSize: 32,
                 icon: const Icon(Icons.apps),
@@ -56,7 +56,7 @@ class _CameraControllerState extends ConsumerState<CameraController> {
               ),
               IconButton(
                 onPressed: () {
-                  widget.pressSwitchCamera().then((_) => {});
+                  widget.pressSwitchCamera(ref).then((_) => {});
                 },
                 iconSize: 32,
                 icon: const Icon(Icons.cameraswitch_outlined),

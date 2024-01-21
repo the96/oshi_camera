@@ -27,4 +27,6 @@ class Camera {
     final pictureFile = await controller.takePicture();
     return pictureFile.readAsBytes();
   }
+
+  bool get isInitialized => controller.value.isInitialized;
 }

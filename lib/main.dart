@@ -35,9 +35,9 @@ class OshiCamera extends ConsumerWidget {
               builder: (_) => Camera(
                 children: [
                   CameraController(
-                    pressOptions: () {},
+                    pressOptions: (_) {},
                     pressShutter: takePicture,
-                    pressSwitchCamera: () {},
+                    pressSwitchCamera: switchCamera,
                   ),
                 ],
               ),
@@ -56,8 +56,12 @@ class OshiCamera extends ConsumerWidget {
     final picture = await camera.takePicture();
     final datestr = DateFormat('yyyy-MM-dd-HH-mm-ss').format(DateTime.now());
     ImageGallerySaver.saveImage(picture, name: datestr);
-    print("success to save image");
-    await Future<void>.delayed(const Duration(seconds: 3));
     return;
+  }
+
+  Future<void> switchCamera(WidgetRef ref) async {
+    final length = ref.read(cameraDescriptionsProvider).length;
+    final index = ref.read(cameraIndexProvider);
+    ref.read(cameraIndexProvider.notifier).state = (index + 1) % length;
   }
 }
