@@ -33,3 +33,8 @@
 #       runner: node
 #     "any.go":
 #       runner: go run
+
+prepare-commit-msg:
+  scripts:
+    "commit-message-prefix.sh":
+      runner: zsh
