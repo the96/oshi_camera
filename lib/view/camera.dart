@@ -1,11 +1,11 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
 
 class Camera extends ConsumerStatefulWidget {
-  final List<Widget> children;
-  const Camera({required this.children, Key? key}) : super(key: key);
+  const Camera({Key? key}) : super(key: key);
 
   @override
   CameraState createState() => CameraState();
@@ -32,7 +32,9 @@ class CameraState extends ConsumerState<Camera> {
               camera.isInitialized) {
             return CameraPreview(
               ref.watch(cameraProvider).value!.controller,
-              child: Stack(fit: StackFit.expand, children: widget.children),
+              child: const Stack(fit: StackFit.expand, children: [
+                OverlayRouter(),
+              ]),
             );
           } else {
             return const Center(child: CircularProgressIndicator());
