@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/controller/image_processing.dart';
 import 'package:oshi_camera/overlay_router.dart';
 
-class App extends ConsumerWidget {
+class AppController extends ConsumerStatefulWidget {
+  const AppController({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppController> createState() => _AppControllerState();
+}
+
+class _AppControllerState extends ConsumerState<AppController> {
+  bool enableChooseImageButton = true;
+
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
       height: 64,
       bottom: 0,
@@ -23,7 +33,7 @@ class App extends ConsumerWidget {
               color: Colors.white,
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: enableChooseImageButton ? () => pickImage(ref) : null,
               iconSize: 32,
               icon: const Icon(Icons.photo_outlined),
               color: Colors.white,

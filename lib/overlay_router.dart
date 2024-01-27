@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/controller/camera.dart';
-import 'package:oshi_camera/model/overlay_state.dart';
-import 'package:oshi_camera/provider/overlay_state.dart';
-import 'package:oshi_camera/view/component/app.dart';
+import 'package:oshi_camera/model/overlay_controller.dart';
+import 'package:oshi_camera/model/overlay_image.dart';
+import 'package:oshi_camera/provider/overlay_router.dart';
+import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
+import 'package:oshi_camera/view/component/image_import_dialog.dart';
 
 class OverlayRouter extends ConsumerWidget {
   const OverlayRouter({super.key});
@@ -28,10 +30,15 @@ class OverlayRouter extends ConsumerWidget {
     );
   }
 
-  static Widget routing(String routeName) {
+  static Widget routing(
+    String routeName, [
+    Map<String, Object> args = const {},
+  ]) {
     switch (routeName) {
       case '/apps':
-        return App();
+        return const AppController();
+      case '/image/edit':
+        return ImageImportDialog(image: args['image'] as OverlayImage);
       case '/':
       default:
         return defaultWidget();
@@ -41,11 +48,12 @@ class OverlayRouter extends ConsumerWidget {
   static void push({
     required String routeName,
     required WidgetRef ref,
+    Map<String, Object> args = const {},
   }) {
     final pushed = ref.read(overlayRouterProvider).push(
-          CameraOverlayState(
+          CameraOverlayController(
             routeName: routeName,
-            widget: routing(routeName),
+            widget: routing(routeName, args),
           ),
         );
     ref.read(overlayRouterProvider.notifier).state = pushed;

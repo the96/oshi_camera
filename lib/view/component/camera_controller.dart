@@ -18,12 +18,13 @@ class CameraController extends ConsumerStatefulWidget {
 }
 
 class _CameraControllerState extends ConsumerState<CameraController> {
-  bool enableShutter = true;
+  bool enableShutterButton = true;
 
   @override
   Widget build(BuildContext context) {
     final camera = ref.watch(cameraProvider).value;
-    final canShutter = enableShutter && camera != null && camera.isInitialized;
+    final canShutter =
+        enableShutterButton && camera != null && camera.isInitialized;
 
     return Stack(
       children: [
@@ -47,10 +48,10 @@ class _CameraControllerState extends ConsumerState<CameraController> {
                 IconButton(
                   onPressed: canShutter
                       ? () {
-                          setState(() => enableShutter = false);
+                          setState(() => enableShutterButton = false);
                           widget.pressShutter(ref).then(
                             (_) {
-                              setState(() => enableShutter = true);
+                              setState(() => enableShutterButton = true);
                             },
                           );
                         }
