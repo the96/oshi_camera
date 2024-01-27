@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/controller/image_processing.dart';
 import 'package:oshi_camera/overlay_router.dart';
+import 'package:oshi_camera/provider/overlay_images.dart';
 
 class AppController extends ConsumerStatefulWidget {
   const AppController({super.key});
@@ -39,9 +40,11 @@ class _AppControllerState extends ConsumerState<AppController> {
               color: Colors.white,
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                ref.read(overlayImagesProvider.notifier).state = [];
+              },
               iconSize: 32,
-              icon: const Icon(Icons.apps),
+              icon: const Icon(Icons.layers_clear_outlined),
               color: Colors.white,
             ),
             IconButton(

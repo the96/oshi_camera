@@ -36,8 +36,8 @@ class OverlayImage {
   }
 
   bool isInRange(num target, int base, double rate) {
-    final min = base - (base * rate).toInt();
-    final max = base + (base * rate).toInt();
+    final min = base - (255 * rate).toInt();
+    final max = base + (255 * rate).toInt();
     return min <= target && target <= max;
   }
 
