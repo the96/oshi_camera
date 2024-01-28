@@ -36,33 +36,35 @@ class OverlayImage {
   }
 
   bool isInRange(num target, int base, double rate) {
-    final min = base - (255 * rate).toInt();
-    final max = base + (255 * rate).toInt();
+    final min = base - (160 * rate).toInt();
+    final max = base + (160 * rate).toInt();
     return min <= target && target <= max;
   }
 
   bool isBack(num r, num g, num b) {
-    int bg_r = backgroundColor.red;
-    int bg_g = backgroundColor.green;
-    int bg_b = backgroundColor.blue;
+    int bgR = backgroundColor.red;
+    int bgG = backgroundColor.green;
+    int bgB = backgroundColor.blue;
 
-    return isInRange(r, bg_r, colorExpandRate) &&
-        isInRange(g, bg_g, colorExpandRate) &&
-        isInRange(b, bg_b, colorExpandRate);
+    return isInRange(r, bgR, colorExpandRate) &&
+        isInRange(g, bgG, colorExpandRate) &&
+        isInRange(b, bgB, colorExpandRate);
   }
 
   // TODO: Future化したほうがいいかも
   Image process() {
-    final endX = math.min(clopEnd.x, image.width - 1);
-    final endY = math.min(clopEnd.y, image.height - 1);
+    final endX = math.min(clopEnd.x, image.width);
+    final endY = math.min(clopEnd.y, image.height);
     final cloppedWidth = (endX - clopStart.x).abs().toInt();
     final cloppedHeight = (endY - clopStart.y).abs().toInt();
 
-    processedImage = Image(
+    processedImage = copyCrop(
+      image,
+      x: clopStart.x.toInt(),
+      y: clopStart.y.toInt(),
       width: cloppedWidth,
       height: cloppedHeight,
-      numChannels: 4,
-    );
+    ).convert(numChannels: 4);
 
     for (int x = clopStart.x.toInt(); x < endX.toInt(); x++) {
       for (int y = clopStart.y.toInt(); y < endY.toInt(); y++) {
@@ -71,13 +73,23 @@ class OverlayImage {
         final r = pixel.r;
         final g = pixel.g;
         final b = pixel.b;
+        if (!isBack(r, g, b)) {
+          continue;
+        }
 
-        final a = isBack(r, g, b) ? 0 : 255;
-        processedImage.setPixelRgba(x, y, r, g, b, a);
+        processedImage.setPixelRgba(
+          x - clopStart.x.toInt(),
+          y - clopStart.y.toInt(),
+          r,
+          g,
+          b,
+          0,
+        );
       }
     }
 
     cached = true;
+    processedImage = processedImage;
     return processedImage;
   }
 
