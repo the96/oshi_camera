@@ -17,7 +17,7 @@ Future<bool> pickImage(WidgetRef ref) async {
     return false;
   }
 
-  final image = decodeImage(bytes)?.convert(numChannels: 4);
+  final image = decodeImage(bytes);
   if (image != null) {
     OverlayRouter.push(
       ref: ref,

@@ -62,8 +62,14 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                   onTapDown: (details) {
                     final x = details.localPosition.dx.toInt();
                     final y = details.localPosition.dy.toInt();
-                    widget.image.setBackgroundColorPoint(
-                      point: image.Point(x, y),
+                    final pixel = widget.image.image.getPixel(x, y);
+                    widget.image.setBackgroundColor(
+                      color: Color.fromRGBO(
+                        pixel.r.toInt(),
+                        pixel.g.toInt(),
+                        pixel.b.toInt(),
+                        1,
+                      ),
                     );
                     setState(() => widget.image.process());
                   },
@@ -118,12 +124,11 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                   margin: const EdgeInsets.only(bottom: 32),
                   transformAlignment: Alignment.bottomCenter,
                   height: 32,
-                  child: ImageImportSlider(
-                      updated: (double v) => debouncing.debounce(() {
-                            widget.image.setBackgroundColorExpandRate(rate: v);
-                            widget.image.process();
-                            setState(() => {});
-                          })),
+                  child: ImageImportSlider(updated: (v) {
+                    widget.image.colorExpandRate = v;
+                    widget.image.process();
+                    setState(() => {});
+                  }),
                 ),
               ),
               Container(
