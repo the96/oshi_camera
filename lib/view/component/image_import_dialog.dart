@@ -21,6 +21,7 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
   double expandRate = 0.0;
   int updatedAt = DateTime.now().millisecondsSinceEpoch;
   late Debouncing debouncing;
+  bool isDarkMode = false;
 
   @override
   void initState() {
@@ -34,8 +35,8 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
     num? endX,
     num? endY,
   }) async {
-    final start = widget.image.clopStart;
-    final end = widget.image.clopEnd;
+    final start = widget.image.cropStart;
+    final end = widget.image.cropEnd;
     widget.image.setCrop(
       start: image.Point(startX ?? start.x, startY ?? start.y),
       end: image.Point(endX ?? end.x, endY ?? end.y),
@@ -46,116 +47,141 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      behavior: HitTestBehavior.opaque,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(color: Theme.of(context).dialogBackgroundColor),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              SizedBox(
-                height: 300,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.deferToChild,
-                  onTapDown: (details) async {
-                    final x = details.localPosition.dx.toInt();
-                    final y = details.localPosition.dy.toInt();
-                    final pixel = widget.image.image.getPixel(x, y);
-                    widget.image.setBackgroundColor(
-                      color: Color.fromRGBO(
-                        pixel.r.toInt(),
-                        pixel.g.toInt(),
-                        pixel.b.toInt(),
-                        1,
-                      ),
-                    );
-                    await widget.image.process();
-                    setState(() {});
-                  },
-                  child: Image.memory(
-                    widget.image.bytes,
-                    fit: BoxFit.contain,
+    final colorScheme = isDarkMode
+        ? ColorScheme.fromSeed(
+            seedColor: Colors.blueGrey,
+            brightness: Brightness.dark,
+          )
+        : ColorScheme.fromSeed(
+            seedColor: Colors.blueGrey,
+            brightness: Brightness.light,
+          );
+
+    return Theme(
+      data: ThemeData.from(colorScheme: colorScheme),
+      child: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(color: colorScheme.background),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: 300,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.deferToChild,
+                    onTapDown: (details) async {
+                      final x = details.localPosition.dx.toInt();
+                      final y = details.localPosition.dy.toInt();
+                      final pixel = widget.image.image.getPixel(x, y);
+                      widget.image.setBackgroundColor(
+                        color: Color.fromRGBO(
+                          pixel.r.toInt(),
+                          pixel.g.toInt(),
+                          pixel.b.toInt(),
+                          1,
+                        ),
+                      );
+                      await widget.image.process();
+                      setState(() {});
+                    },
+                    child: Image.memory(
+                      widget.image.bytes,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
-              ),
-              Material(
-                color: Colors.transparent,
-                child: Row(
-                  children: [
-                    ImageImportClopper(
-                      max: widget.image.image.width - 1,
-                      initValue: 0,
-                      updated: (num v) async {
-                        await updateCrop(startX: v);
-                      },
-                    ),
-                    ImageImportClopper(
-                      max: widget.image.image.width - 1,
-                      initValue: widget.image.image.width - 1,
-                      updated: (num v) async {
-                        await updateCrop(endX: v);
-                      },
-                    ),
-                    ImageImportClopper(
-                      max: widget.image.image.height - 1,
-                      initValue: 0,
-                      updated: (num v) async {
-                        await updateCrop(startY: v);
-                      },
-                    ),
-                    ImageImportClopper(
-                      max: widget.image.image.height - 1,
-                      initValue: widget.image.image.height - 1,
-                      updated: (num v) async {
-                        await updateCrop(endY: v);
-                      },
-                    ),
-                  ],
+                Material(
+                  color: Colors.transparent,
+                  child: Row(
+                    children: [
+                      ImageImportClopper(
+                        max: widget.image.image.width - 1,
+                        initValue: 0,
+                        updated: (num v) async {
+                          await updateCrop(startX: v);
+                        },
+                      ),
+                      ImageImportClopper(
+                        max: widget.image.image.width - 1,
+                        initValue: widget.image.image.width - 1,
+                        updated: (num v) async {
+                          await updateCrop(endX: v);
+                        },
+                      ),
+                      ImageImportClopper(
+                        max: widget.image.image.height - 1,
+                        initValue: 0,
+                        updated: (num v) async {
+                          await updateCrop(startY: v);
+                        },
+                      ),
+                      ImageImportClopper(
+                        max: widget.image.image.height - 1,
+                        initValue: widget.image.image.height - 1,
+                        updated: (num v) async {
+                          await updateCrop(endY: v);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '背景色の閾値',
-                  style: Theme.of(context).textTheme.labelMedium,
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '背景色の閾値',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
                 ),
-              ),
-              Material(
-                color: Colors.transparent,
-                child: Container(
+                Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    alignment: Alignment.bottomCenter,
+                    margin: const EdgeInsets.only(bottom: 32),
+                    transformAlignment: Alignment.bottomCenter,
+                    height: 32,
+                    child: ImageImportSlider(updated: (v) async {
+                      widget.image.colorExpandRate = v;
+                      await widget.image.process();
+                      setState(() => {});
+                    }),
+                  ),
+                ),
+                Container(
                   alignment: Alignment.bottomCenter,
                   margin: const EdgeInsets.only(bottom: 32),
-                  transformAlignment: Alignment.bottomCenter,
-                  height: 32,
-                  child: ImageImportSlider(updated: (v) async {
-                    widget.image.colorExpandRate = v;
-                    await widget.image.process();
-                    setState(() => {});
-                  }),
+                  child: ElevatedButton(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      widget.image.process();
+                      final overlayImages = ref.read(overlayImagesProvider);
+                      ref.read(overlayImagesProvider.notifier).state = [
+                        ...overlayImages,
+                        widget.image,
+                      ];
+                      OverlayRouter.pop(ref);
+                    },
+                  ),
                 ),
+              ],
+            ),
+            Container(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                iconSize: 32,
+                icon: const Icon(Icons.light_mode),
+                color: colorScheme.primary,
+                onPressed: () {
+                  isDarkMode = !isDarkMode;
+                  setState(() {});
+                },
               ),
-              Container(
-                alignment: Alignment.bottomCenter,
-                margin: const EdgeInsets.only(bottom: 32),
-                child: ElevatedButton(
-                  child: const Text('OK'),
-                  onPressed: () {
-                    widget.image.process();
-                    final overlayImages = ref.read(overlayImagesProvider);
-                    ref.read(overlayImagesProvider.notifier).state = [
-                      ...overlayImages,
-                      widget.image,
-                    ];
-                    OverlayRouter.pop(ref);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -178,21 +204,52 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
 
   @override
   Widget build(BuildContext context) {
-    return Slider(
-      value: expandRate,
-      min: 0.0,
-      max: 1.0,
-      onChanged: (v) async {
-        prevExpandRate = expandRate;
-        expandRate = v;
-        throttling.throttle(() async {
-          await widget.updated(v);
-        });
-        setState(() {});
-      },
-      onChangeEnd: (v) async {
-        await widget.updated(v);
-      },
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        IconButton(
+          iconSize: 24,
+          icon: const Icon(Icons.keyboard_arrow_left),
+          color: Theme.of(context).colorScheme.primary,
+          onPressed: () {
+            expandRate = math.max(0.0, expandRate - 0.01);
+            throttling.throttle(() async {
+              await widget.updated(expandRate);
+            });
+            setState(() {});
+          },
+        ),
+        Expanded(
+          child: Slider(
+            value: expandRate,
+            min: 0.0,
+            max: 1.0,
+            onChanged: (v) async {
+              prevExpandRate = expandRate;
+              expandRate = v;
+              throttling.throttle(() async {
+                await widget.updated(v);
+              });
+              setState(() {});
+            },
+            onChangeEnd: (v) async {
+              await widget.updated(v);
+            },
+          ),
+        ),
+        IconButton(
+          iconSize: 24,
+          icon: const Icon(Icons.keyboard_arrow_right),
+          color: Theme.of(context).colorScheme.primary,
+          onPressed: () {
+            expandRate = math.min(1.0, expandRate + 0.01);
+            throttling.throttle(() async {
+              await widget.updated(expandRate);
+            });
+            setState(() {});
+          },
+        )
+      ],
     );
   }
 }
@@ -246,6 +303,7 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
           child: IconButton(
             iconSize: 32,
             icon: const Icon(Icons.keyboard_arrow_up),
+            color: Theme.of(context).colorScheme.primary,
             onPressed: () {
               i = getInRangeValue(i + 1, min: 0, max: widget.max);
               controller.value = TextEditingValue(text: i.toString());
@@ -289,6 +347,7 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
             IconButton(
               iconSize: 32,
               icon: const Icon(Icons.touch_app),
+              color: Theme.of(context).colorScheme.primary,
               onPressed: () {},
             ),
           ],
@@ -300,6 +359,7 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
           child: IconButton(
             iconSize: 32,
             icon: const Icon(Icons.keyboard_arrow_down),
+            color: Theme.of(context).colorScheme.primary,
             onPressed: () {
               i = getInRangeValue(i - 1, min: 0, max: widget.max);
               controller.value = TextEditingValue(text: i.toString());
