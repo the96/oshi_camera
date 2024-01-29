@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:image/image.dart';
+import 'package:uuid/uuid.dart';
 
 // 切り抜き設定済みの画像
 class OverlayImage {
@@ -18,7 +20,9 @@ class OverlayImage {
 
   OverlayImage({
     required this.image,
-  });
+  }) {
+    processedImage = image;
+  }
 
   void setCrop({required Point start, required Point end}) {
     clopStart = start;
@@ -28,10 +32,15 @@ class OverlayImage {
 
   void setBackgroundColor({
     required material.Color color,
-    double expandRate = 0.0,
   }) {
     backgroundColor = color;
-    colorExpandRate = expandRate;
+    cached = false;
+  }
+
+  void setColorExpandRate({
+    required double rate,
+  }) {
+    colorExpandRate = rate;
     cached = false;
   }
 
@@ -51,52 +60,71 @@ class OverlayImage {
         isInRange(b, bgB, colorExpandRate);
   }
 
-  // TODO: Future化したほうがいいかも
-  Image process() {
+  Uint8List setAlpha(Uint8List splitedBytes) {
+    for (int i = 0; i < splitedBytes.length; i += 4) {
+      final r = splitedBytes[i];
+      final g = splitedBytes[i + 1];
+      final b = splitedBytes[i + 2];
+      // if (r < 10 && g > 220 && b < 10) {
+      if (!isBack(r, g, b)) {
+        continue;
+      }
+      splitedBytes[i + 3] = 0;
+    }
+    return splitedBytes;
+  }
+
+  Future<Image> process() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
     final endX = math.min(clopEnd.x, image.width);
     final endY = math.min(clopEnd.y, image.height);
     final cloppedWidth = (endX - clopStart.x).abs().toInt();
     final cloppedHeight = (endY - clopStart.y).abs().toInt();
 
-    processedImage = copyCrop(
-      image,
-      x: clopStart.x.toInt(),
-      y: clopStart.y.toInt(),
-      width: cloppedWidth,
-      height: cloppedHeight,
-    ).convert(numChannels: 4);
+    assert(image.numChannels == 4);
 
-    for (int x = clopStart.x.toInt(); x < endX.toInt(); x++) {
-      for (int y = clopStart.y.toInt(); y < endY.toInt(); y++) {
-        final pixel = image.getPixel(x, y);
+    final bytes = image.getBytes(order: ChannelOrder.rgba, alpha: 255);
+    final pixelLength = bytes.length ~/ 4;
+    const isolateCount = 8;
 
-        final r = pixel.r;
-        final g = pixel.g;
-        final b = pixel.b;
-        if (!isBack(r, g, b)) {
-          continue;
-        }
+    final splitedBytes = List.generate(
+      isolateCount,
+      (index) => bytes.sublist(
+        (pixelLength * index ~/ isolateCount) * 4,
+        index == isolateCount - 1
+            ? bytes.length
+            : ((index + 1) * pixelLength ~/ isolateCount) * 4,
+      ),
+    );
 
-        processedImage.setPixelRgba(
-          x - clopStart.x.toInt(),
-          y - clopStart.y.toInt(),
-          r,
-          g,
-          b,
-          0,
-        );
-      }
-    }
+    final computedSplitedBytes = await Future.wait([
+      for (final splitedBytes in splitedBytes) compute(setAlpha, splitedBytes),
+    ]);
+
+    final processedBytes = Uint8List(bytes.length);
+    computedSplitedBytes.fold(0, (value, element) {
+      processedBytes.setAll(value, element);
+      return value + element.length;
+    });
+
+    processedImage = Image.fromBytes(
+      width: image.width,
+      height: image.height,
+      bytes: bytes.buffer,
+      format: Format.uint8,
+      numChannels: 4,
+      order: ChannelOrder.rgba,
+    );
 
     cached = true;
-    processedImage = processedImage;
+    print('process time: ${DateTime.now().millisecondsSinceEpoch - now}');
     return processedImage;
   }
 
   Uint8List get bytes {
     if (!cached) {
       print('please cache processing result with editing operation');
-      process();
     }
     return encodePng(processedImage);
   }

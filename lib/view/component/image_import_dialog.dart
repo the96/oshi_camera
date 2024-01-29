@@ -28,19 +28,20 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
     debouncing = Debouncing(duration: const Duration(milliseconds: 200));
   }
 
-  void updateCrop({
+  Future<void> updateCrop({
     num? startX,
     num? startY,
     num? endX,
     num? endY,
-  }) {
+  }) async {
     final start = widget.image.clopStart;
     final end = widget.image.clopEnd;
     widget.image.setCrop(
       start: image.Point(startX ?? start.x, startY ?? start.y),
       end: image.Point(endX ?? end.x, endY ?? end.y),
     );
-    setState(() => widget.image.process());
+    await widget.image.process();
+    setState(() {});
   }
 
   @override
@@ -59,7 +60,7 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                 height: 300,
                 child: GestureDetector(
                   behavior: HitTestBehavior.deferToChild,
-                  onTapDown: (details) {
+                  onTapDown: (details) async {
                     final x = details.localPosition.dx.toInt();
                     final y = details.localPosition.dy.toInt();
                     final pixel = widget.image.image.getPixel(x, y);
@@ -71,7 +72,8 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                         1,
                       ),
                     );
-                    setState(() => widget.image.process());
+                    await widget.image.process();
+                    setState(() {});
                   },
                   child: Image.memory(
                     widget.image.bytes,
@@ -86,26 +88,30 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                     ImageImportClopper(
                       max: widget.image.image.width - 1,
                       initValue: 0,
-                      updated: (num v) =>
-                          debouncing.debounce(() => updateCrop(startX: v)),
+                      updated: (num v) async {
+                        await updateCrop(startX: v);
+                      },
                     ),
                     ImageImportClopper(
                       max: widget.image.image.width - 1,
                       initValue: widget.image.image.width - 1,
-                      updated: (num v) =>
-                          debouncing.debounce(() => updateCrop(endX: v)),
+                      updated: (num v) async {
+                        await updateCrop(endX: v);
+                      },
                     ),
                     ImageImportClopper(
                       max: widget.image.image.height - 1,
                       initValue: 0,
-                      updated: (num v) =>
-                          debouncing.debounce(() => updateCrop(startY: v)),
+                      updated: (num v) async {
+                        await updateCrop(startY: v);
+                      },
                     ),
                     ImageImportClopper(
                       max: widget.image.image.height - 1,
                       initValue: widget.image.image.height - 1,
-                      updated: (num v) =>
-                          debouncing.debounce(() => updateCrop(endY: v)),
+                      updated: (num v) async {
+                        await updateCrop(endY: v);
+                      },
                     ),
                   ],
                 ),
@@ -124,9 +130,9 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                   margin: const EdgeInsets.only(bottom: 32),
                   transformAlignment: Alignment.bottomCenter,
                   height: 32,
-                  child: ImageImportSlider(updated: (v) {
+                  child: ImageImportSlider(updated: (v) async {
                     widget.image.colorExpandRate = v;
-                    widget.image.process();
+                    await widget.image.process();
                     setState(() => {});
                   }),
                 ),
@@ -167,6 +173,8 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
   double expandRate = 0.0;
   double prevExpandRate = 0.0;
   int updatedAt = DateTime.now().millisecondsSinceEpoch;
+  Throttling throttling =
+      Throttling(duration: const Duration(milliseconds: 500));
 
   @override
   Widget build(BuildContext context) {
@@ -174,19 +182,16 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
       value: expandRate,
       min: 0.0,
       max: 1.0,
-      onChanged: (v) {
-        setState(() {
-          prevExpandRate = expandRate;
-          expandRate = v;
-          final now = DateTime.now().millisecondsSinceEpoch;
-          if (now - updatedAt > 500) {
-            widget.updated(v);
-            updatedAt = now;
-          }
+      onChanged: (v) async {
+        prevExpandRate = expandRate;
+        expandRate = v;
+        throttling.throttle(() async {
+          await widget.updated(v);
         });
+        setState(() {});
       },
-      onChangeEnd: (v) {
-        widget.updated(v);
+      onChangeEnd: (v) async {
+        await widget.updated(v);
       },
     );
   }
@@ -209,6 +214,8 @@ class ImageImportClopper extends ConsumerStatefulWidget {
 class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
   int i = 0;
   late TextEditingController controller;
+  final Debouncing debouncing =
+      Debouncing(duration: const Duration(milliseconds: 200));
 
   int getInRangeValue(int v, {required int min, required int max}) {
     return math.min(math.max(min, v), max);
@@ -240,11 +247,12 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
             iconSize: 32,
             icon: const Icon(Icons.keyboard_arrow_up),
             onPressed: () {
-              setState(() {
-                i = getInRangeValue(i + 1, min: 0, max: widget.max);
-                controller.value = TextEditingValue(text: i.toString());
-                widget.updated(i);
+              i = getInRangeValue(i + 1, min: 0, max: widget.max);
+              controller.value = TextEditingValue(text: i.toString());
+              debouncing.debounce(() async {
+                await widget.updated(i);
               });
+              setState(() {});
             },
           ),
         ),
@@ -258,7 +266,7 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
                 textAlign: TextAlign.right,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (v) => setState(() {
+                onChanged: (v) {
                   late int value;
                   try {
                     value = int.parse(v);
@@ -271,9 +279,11 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
                     max: widget.max,
                   );
                   controller.value = TextEditingValue(text: i.toString());
-                  widget.updated(i);
-                  return;
-                }),
+                  debouncing.debounce(() async {
+                    await widget.updated(i);
+                  });
+                  setState(() {});
+                },
               ),
             ),
             IconButton(
@@ -291,11 +301,12 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
             iconSize: 32,
             icon: const Icon(Icons.keyboard_arrow_down),
             onPressed: () {
-              setState(() {
-                i = getInRangeValue(i - 1, min: 0, max: widget.max);
-                controller.value = TextEditingValue(text: i.toString());
-                widget.updated(i);
+              i = getInRangeValue(i - 1, min: 0, max: widget.max);
+              controller.value = TextEditingValue(text: i.toString());
+              debouncing.debounce(() async {
+                await widget.updated(i);
               });
+              setState(() {});
             },
           ),
         ),
