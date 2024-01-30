@@ -9,6 +9,8 @@ import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:throttling/throttling.dart';
 
+GlobalKey importImageKey = GlobalKey();
+
 class ImageImportDialog extends ConsumerStatefulWidget {
   final ImportProcessingImage image;
   const ImageImportDialog({super.key, required this.image});
@@ -22,6 +24,9 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
   int updatedAt = DateTime.now().millisecondsSinceEpoch;
   late Debouncing debouncing;
   bool isDarkMode = false;
+
+  Offset? offset;
+  Size? imageRenderSize;
 
   @override
   void initState() {
@@ -70,40 +75,85 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
             Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                SizedBox(
-                  height: 300,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.deferToChild,
-                    onTapDown: (details) {
-                      final x = details.localPosition.dx.toInt();
-                      final y = details.localPosition.dy.toInt();
-                      final pixel = widget.image.image.getPixel(x, y);
-                      widget.image.setBackgroundColor(
-                        color: Color.fromRGBO(
-                          pixel.r.toInt(),
-                          pixel.g.toInt(),
-                          pixel.b.toInt(),
-                          1,
-                        ),
-                      );
-                      widget.image.process();
-                      setState(() {});
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  margin: const EdgeInsets.symmetric(vertical: 24),
+                  child: FutureBuilder(
+                    future: widget.image.processImage,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        print(offset);
+                        return Stack(
+                          fit: StackFit.passthrough,
+                          children: [
+                            GestureDetector(
+                              behavior: HitTestBehavior.deferToChild,
+                              onTapDown: (details) async {
+                                final RenderBox? renderBox = importImageKey
+                                    .currentContext
+                                    ?.findRenderObject() as RenderBox?;
+
+                                if (renderBox == null) {
+                                  return;
+                                }
+
+                                final dx = details.localPosition.dx.toInt();
+                                final dy = details.localPosition.dy.toInt();
+
+                                imageRenderSize = renderBox.size;
+                                final x = (widget.image.croppedWidth /
+                                        imageRenderSize!.width) *
+                                    dx;
+                                final y = (widget.image.croppedHeight /
+                                        imageRenderSize!.height) *
+                                    dy;
+
+                                if (!widget.image.cached) {
+                                  widget.image.process();
+                                  await widget.image.processImage;
+                                }
+
+                                final pixel = widget.image.processedImage!
+                                    .getPixel(x.toInt(), y.toInt());
+                                widget.image.setBackgroundColor(
+                                  color: Color.fromRGBO(
+                                    pixel.r.toInt(),
+                                    pixel.g.toInt(),
+                                    pixel.b.toInt(),
+                                    1,
+                                  ),
+                                );
+                                offset = Offset(dx.toDouble(), dy.toDouble());
+
+                                widget.image.process();
+                                setState(() {});
+                              },
+                              child: Image.memory(
+                                image.encodePng(snapshot.data!),
+                                fit: BoxFit.contain,
+                                key: importImageKey,
+                              ),
+                            ),
+                            Positioned(
+                              left: (offset?.dx ?? 0),
+                              top: (offset?.dy ?? 0),
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
                     },
-                    child: FutureBuilder(
-                      future: widget.image.processImage,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return Image.memory(
-                            image.encodePng(snapshot.data!),
-                            fit: BoxFit.contain,
-                          );
-                        } else {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      },
-                    ),
                   ),
                 ),
                 Material(

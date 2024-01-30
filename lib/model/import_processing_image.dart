@@ -16,7 +16,7 @@ class ImportProcessingImage {
 
   bool cached = false;
   Future<Image>? processImage;
-  Image? _processedImage;
+  Image? processedImage;
 
   ImportProcessingImage({
     required this.image,
@@ -72,14 +72,21 @@ class ImportProcessingImage {
     return splitedBytes;
   }
 
+  int get croppedWidth {
+    final endX = math.min(cropEnd.x, image.width);
+    final startX = math.max(cropStart.x, 0);
+    return (endX - startX).abs().toInt();
+  }
+
+  int get croppedHeight {
+    final endY = math.min(cropEnd.y, image.height);
+    final startY = math.max(cropStart.y, 0);
+    return (endY - startY).abs().toInt();
+  }
+
   void process() {
     processImage = Future(
       () {
-        final endX = math.min(cropEnd.x, image.width);
-        final endY = math.min(cropEnd.y, image.height);
-        final croppedWidth = (endX - cropStart.x).abs().toInt();
-        final croppedHeight = (endY - cropStart.y).abs().toInt();
-
         assert(image.numChannels == 4);
 
         final bytes = image.getBytes(order: ChannelOrder.rgba, alpha: 255);
@@ -128,7 +135,7 @@ class ImportProcessingImage {
           }
         }
         cached = true;
-        _processedImage = Image.fromBytes(
+        processedImage = Image.fromBytes(
           width: croppedWidth,
           height: croppedHeight,
           bytes: croppedBytes.buffer,
@@ -137,16 +144,16 @@ class ImportProcessingImage {
           order: ChannelOrder.rgba,
         );
 
-        return _processedImage!;
+        return processedImage!;
       },
     );
   }
 
   Uint8List? get bytes {
-    if (!cached || _processedImage == null) {
+    if (!cached || processedImage == null) {
       return null;
     }
 
-    return encodePng(_processedImage!);
+    return encodePng(processedImage!);
   }
 }
