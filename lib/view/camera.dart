@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
-import 'package:oshi_camera/provider/camera_overlay.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:oshi_camera/view/component/presentational/overlay_image.dart';
 

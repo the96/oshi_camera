@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:image/image.dart';
-import 'package:uuid/uuid.dart';
 
 // 切り抜き設定済みの画像
 class OverlayImage {
@@ -79,8 +78,6 @@ class OverlayImage {
   }
 
   Future<Image> process() async {
-    final now = DateTime.now().millisecondsSinceEpoch;
-
     final endX = math.min(cropEnd.x, image.width);
     final endY = math.min(cropEnd.y, image.height);
     final croppedWidth = (endX - cropStart.x).abs().toInt();
@@ -143,7 +140,6 @@ class OverlayImage {
     );
 
     cached = true;
-    print('process time: ${DateTime.now().millisecondsSinceEpoch - now}');
     return processedImage;
   }
 

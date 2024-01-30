@@ -1,11 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:oshi_camera/model/overlay_controller.dart';
 import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
-import 'package:oshi_camera/provider/overlay_images.dart';
-import 'package:oshi_camera/provider/overlay_router.dart';
 
 Future<bool> pickImage(WidgetRef ref) async {
   final imageFile = await ImagePicker().pickImage(
