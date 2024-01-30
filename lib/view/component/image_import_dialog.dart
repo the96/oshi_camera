@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as image;
-import 'package:oshi_camera/model/overlay_image.dart';
+import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:throttling/throttling.dart';
 
 class ImageImportDialog extends ConsumerStatefulWidget {
-  final OverlayImage image;
+  final ImportProcessingImage image;
   const ImageImportDialog({super.key, required this.image});
 
   @override
@@ -25,23 +25,24 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
 
   @override
   void initState() {
+    widget.image.process();
     super.initState();
     debouncing = Debouncing(duration: const Duration(milliseconds: 200));
   }
 
-  Future<void> updateCrop({
+  void updateCrop({
     num? startX,
     num? startY,
     num? endX,
     num? endY,
-  }) async {
+  }) {
     final start = widget.image.cropStart;
     final end = widget.image.cropEnd;
     widget.image.setCrop(
       start: image.Point(startX ?? start.x, startY ?? start.y),
       end: image.Point(endX ?? end.x, endY ?? end.y),
     );
-    await widget.image.process();
+    widget.image.process();
     setState(() {});
   }
 
@@ -73,7 +74,7 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                   height: 300,
                   child: GestureDetector(
                     behavior: HitTestBehavior.deferToChild,
-                    onTapDown: (details) async {
+                    onTapDown: (details) {
                       final x = details.localPosition.dx.toInt();
                       final y = details.localPosition.dy.toInt();
                       final pixel = widget.image.image.getPixel(x, y);
@@ -85,12 +86,23 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                           1,
                         ),
                       );
-                      await widget.image.process();
+                      widget.image.process();
                       setState(() {});
                     },
-                    child: Image.memory(
-                      widget.image.bytes,
-                      fit: BoxFit.contain,
+                    child: FutureBuilder(
+                      future: widget.image.processImage,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return Image.memory(
+                            image.encodePng(snapshot.data!),
+                            fit: BoxFit.contain,
+                          );
+                        } else {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -101,29 +113,29 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                       ImageImportClopper(
                         max: widget.image.image.width - 1,
                         initValue: 0,
-                        updated: (num v) async {
-                          await updateCrop(startX: v);
+                        updated: (num v) {
+                          updateCrop(startX: v);
                         },
                       ),
                       ImageImportClopper(
                         max: widget.image.image.width - 1,
                         initValue: widget.image.image.width - 1,
-                        updated: (num v) async {
-                          await updateCrop(endX: v);
+                        updated: (num v) {
+                          updateCrop(endX: v);
                         },
                       ),
                       ImageImportClopper(
                         max: widget.image.image.height - 1,
                         initValue: 0,
-                        updated: (num v) async {
-                          await updateCrop(startY: v);
+                        updated: (num v) {
+                          updateCrop(startY: v);
                         },
                       ),
                       ImageImportClopper(
                         max: widget.image.image.height - 1,
                         initValue: widget.image.image.height - 1,
-                        updated: (num v) async {
-                          await updateCrop(endY: v);
+                        updated: (num v) {
+                          updateCrop(endY: v);
                         },
                       ),
                     ],
@@ -143,9 +155,9 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                     margin: const EdgeInsets.only(bottom: 32),
                     transformAlignment: Alignment.bottomCenter,
                     height: 32,
-                    child: ImageImportSlider(updated: (v) async {
+                    child: ImageImportSlider(updated: (v) {
                       widget.image.colorExpandRate = v;
-                      await widget.image.process();
+                      widget.image.process();
                       setState(() => {});
                     }),
                   ),
@@ -155,12 +167,18 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                   margin: const EdgeInsets.only(bottom: 32),
                   child: ElevatedButton(
                     child: const Text('OK'),
-                    onPressed: () {
+                    onPressed: () async {
                       widget.image.process();
                       final overlayImages = ref.read(overlayImagesProvider);
+
+                      if (!widget.image.cached) {
+                        widget.image.process();
+                        await widget.image.processImage;
+                      }
+
                       ref.read(overlayImagesProvider.notifier).state = [
                         ...overlayImages,
-                        widget.image.bytes,
+                        widget.image.bytes!,
                       ];
                       OverlayRouter.pop(ref);
                     },
@@ -213,8 +231,8 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
           color: Theme.of(context).colorScheme.primary,
           onPressed: () {
             expandRate = math.max(0.0, expandRate - 0.01);
-            throttling.throttle(() async {
-              await widget.updated(expandRate);
+            throttling.throttle(() {
+              widget.updated(expandRate);
             });
             setState(() {});
           },
@@ -227,13 +245,13 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
             onChanged: (v) async {
               prevExpandRate = expandRate;
               expandRate = v;
-              throttling.throttle(() async {
-                await widget.updated(v);
+              throttling.throttle(() {
+                widget.updated(v);
               });
               setState(() {});
             },
-            onChangeEnd: (v) async {
-              await widget.updated(v);
+            onChangeEnd: (v) {
+              widget.updated(v);
             },
           ),
         ),
@@ -243,8 +261,8 @@ class _ImageImportSliderState extends ConsumerState<ImageImportSlider> {
           color: Theme.of(context).colorScheme.primary,
           onPressed: () {
             expandRate = math.min(1.0, expandRate + 0.01);
-            throttling.throttle(() async {
-              await widget.updated(expandRate);
+            throttling.throttle(() {
+              widget.updated(expandRate);
             });
             setState(() {});
           },
@@ -307,8 +325,8 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
             onPressed: () {
               i = getInRangeValue(i + 1, min: 0, max: widget.max);
               controller.value = TextEditingValue(text: i.toString());
-              debouncing.debounce(() async {
-                await widget.updated(i);
+              debouncing.debounce(() {
+                widget.updated(i);
               });
               setState(() {});
             },
@@ -337,8 +355,8 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
                     max: widget.max,
                   );
                   controller.value = TextEditingValue(text: i.toString());
-                  debouncing.debounce(() async {
-                    await widget.updated(i);
+                  debouncing.debounce(() {
+                    widget.updated(i);
                   });
                   setState(() {});
                 },
@@ -363,8 +381,8 @@ class _ImageImportClopperState extends ConsumerState<ImageImportClopper> {
             onPressed: () {
               i = getInRangeValue(i - 1, min: 0, max: widget.max);
               controller.value = TextEditingValue(text: i.toString());
-              debouncing.debounce(() async {
-                await widget.updated(i);
+              debouncing.debounce(() {
+                widget.updated(i);
               });
               setState(() {});
             },

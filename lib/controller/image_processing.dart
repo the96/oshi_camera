@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:oshi_camera/model/overlay_image.dart';
+import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 
 Future<bool> pickImage(WidgetRef ref) async {
@@ -20,7 +20,7 @@ Future<bool> pickImage(WidgetRef ref) async {
       ref: ref,
       routeName: '/image/edit',
       args: {
-        'image': OverlayImage(
+        'image': ImportProcessingImage(
           image: image,
         ),
       },

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/controller/camera.dart';
 import 'package:oshi_camera/model/overlay_controller.dart';
-import 'package:oshi_camera/model/overlay_image.dart';
+import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
@@ -38,7 +38,7 @@ class OverlayRouter extends ConsumerWidget {
       case '/apps':
         return const AppController();
       case '/image/edit':
-        return ImageImportDialog(image: args['image'] as OverlayImage);
+        return ImageImportDialog(image: args['image'] as ImportProcessingImage);
       case '/':
       default:
         return defaultWidget();
