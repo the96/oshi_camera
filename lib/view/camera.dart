@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
-import 'package:oshi_camera/view/component/presentational/overlay_image.dart';
 
 class Camera extends ConsumerStatefulWidget {
   const Camera({Key? key}) : super(key: key);
@@ -36,7 +35,7 @@ class CameraState extends ConsumerState<Camera> {
             return CameraPreview(
               ref.watch(cameraProvider).value!.controller,
               child: Stack(fit: StackFit.expand, children: [
-                for (final image in overlayImages) OverlayImage(image: image),
+                for (final image in overlayImages) Image.memory(image),
                 const OverlayRouter(),
               ]),
             );

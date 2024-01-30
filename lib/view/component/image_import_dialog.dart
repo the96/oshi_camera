@@ -160,7 +160,7 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                       final overlayImages = ref.read(overlayImagesProvider);
                       ref.read(overlayImagesProvider.notifier).state = [
                         ...overlayImages,
-                        widget.image,
+                        widget.image.bytes,
                       ];
                       OverlayRouter.pop(ref);
                     },
