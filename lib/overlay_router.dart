@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/controller/camera.dart';
 import 'package:oshi_camera/model/overlay_controller.dart';
 import 'package:oshi_camera/model/import_processing_image.dart';
+import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
@@ -25,7 +26,7 @@ class OverlayRouter extends ConsumerWidget {
 
   static Widget defaultWidget() {
     return CameraController(
-      pressOptions: (WidgetRef ref) => push(routeName: '/apps', ref: ref),
+      pressOptions: (WidgetRef ref) => push(routeName: appRoute, ref: ref),
       pressShutter: takePicture,
       pressSwitchCamera: switchCamera,
     );
@@ -36,13 +37,14 @@ class OverlayRouter extends ConsumerWidget {
     Map<String, Object> args = const {},
   ]) {
     switch (routeName) {
-      case '/apps':
+      case appRoute:
         return const AppController();
-      case '/image/edit':
+      case imageTrimDialogRoute:
         return ImageTrimDialog(image: args['image'] as ImportProcessingImage);
       case '/':
-      default:
         return defaultWidget();
+      default:
+        throw Exception('cannot routing default');
     }
   }
 
@@ -51,17 +53,31 @@ class OverlayRouter extends ConsumerWidget {
     required WidgetRef ref,
     Map<String, Object> args = const {},
   }) {
-    final pushed = ref.read(overlayRouterProvider).push(
-          CameraOverlayController(
-            routeName: routeName,
-            widget: routing(routeName, args),
-          ),
-        );
+    final stack = ref.read(overlayRouterProvider);
+    final current = stack.top;
+
+    final pushed = stack.push(
+      CameraOverlayController(
+        routeName: routeName,
+        widget: routing(routeName, args),
+      ),
+    );
     ref.read(overlayRouterProvider.notifier).state = pushed;
+
+    if (current?.isCameraView != pushed.top?.isCameraView) {
+      ref.read(cameraProvider).value!.controller.pausePreview().then((_) {});
+    }
   }
 
   static void pop(WidgetRef ref) {
-    final popped = ref.read(overlayRouterProvider).pop();
+    final stack = ref.read(overlayRouterProvider);
+    final current = stack.top;
+    final popped = stack.pop();
+
+    if (current?.isCameraView != popped.top?.isCameraView) {
+      ref.read(cameraProvider).value!.controller.resumePreview().then((_) {});
+    }
+
     ref.read(overlayRouterProvider.notifier).state = popped;
   }
 }

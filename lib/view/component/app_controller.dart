@@ -4,6 +4,8 @@ import 'package:oshi_camera/controller/image_processing.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 
+const appRoute = '/apps';
+
 class AppController extends ConsumerStatefulWidget {
   const AppController({super.key});
 

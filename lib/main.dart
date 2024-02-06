@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/view/camera.dart';
 
 void main() {

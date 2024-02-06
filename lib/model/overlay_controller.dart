@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:oshi_camera/view/component/app_controller.dart';
+import 'package:oshi_camera/view/component/camera_controller.dart';
 
 class CameraOverlayController {
   final String routeName;
@@ -10,6 +12,8 @@ class CameraOverlayController {
     required this.widget,
     this.args = const {},
   });
+
+  bool get isCameraView => [rootRoute, appRoute].contains(routeName);
 }
 
 class CameraOverlayControllerStack {
