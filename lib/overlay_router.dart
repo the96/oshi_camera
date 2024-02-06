@@ -7,6 +7,7 @@ import 'package:oshi_camera/provider/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
 import 'package:oshi_camera/view/component/image_import_dialog.dart';
+import 'package:oshi_camera/view/component/image_trim_dialog.dart';
 
 class OverlayRouter extends ConsumerWidget {
   const OverlayRouter({super.key});
@@ -38,7 +39,7 @@ class OverlayRouter extends ConsumerWidget {
       case '/apps':
         return const AppController();
       case '/image/edit':
-        return ImageImportDialog(image: args['image'] as ImportProcessingImage);
+        return ImageTrimDialog(image: args['image'] as ImportProcessingImage);
       case '/':
       default:
         return defaultWidget();

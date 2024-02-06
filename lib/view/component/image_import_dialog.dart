@@ -7,6 +7,7 @@ import 'package:image/image.dart' as image;
 import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
+import 'package:oshi_camera/view/component/image_import_dialog/image_import_render.dart';
 import 'package:throttling/throttling.dart';
 
 GlobalKey importImageKey = GlobalKey();
@@ -82,71 +83,13 @@ class _ImageImportDialogState extends ConsumerState<ImageImportDialog> {
                     future: widget.image.processImage,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
-                        print(offset);
-                        return Stack(
-                          fit: StackFit.passthrough,
-                          children: [
-                            GestureDetector(
-                              behavior: HitTestBehavior.deferToChild,
-                              onTapDown: (details) async {
-                                final RenderBox? renderBox = importImageKey
-                                    .currentContext
-                                    ?.findRenderObject() as RenderBox?;
-
-                                if (renderBox == null) {
-                                  return;
-                                }
-
-                                final dx = details.localPosition.dx.toInt();
-                                final dy = details.localPosition.dy.toInt();
-
-                                imageRenderSize = renderBox.size;
-                                final x = (widget.image.croppedWidth /
-                                        imageRenderSize!.width) *
-                                    dx;
-                                final y = (widget.image.croppedHeight /
-                                        imageRenderSize!.height) *
-                                    dy;
-
-                                if (!widget.image.cached) {
-                                  widget.image.process();
-                                  await widget.image.processImage;
-                                }
-
-                                final pixel = widget.image.processedImage!
-                                    .getPixel(x.toInt(), y.toInt());
-                                widget.image.setBackgroundColor(
-                                  color: Color.fromRGBO(
-                                    pixel.r.toInt(),
-                                    pixel.g.toInt(),
-                                    pixel.b.toInt(),
-                                    1,
-                                  ),
-                                );
-                                offset = Offset(dx.toDouble(), dy.toDouble());
-
-                                widget.image.process();
-                                setState(() {});
-                              },
-                              child: Image.memory(
-                                image.encodePng(snapshot.data!),
-                                fit: BoxFit.contain,
-                                key: importImageKey,
-                              ),
-                            ),
-                            Positioned(
-                              left: (offset?.dx ?? 0),
-                              top: (offset?.dy ?? 0),
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.5),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
+                        return ImportImageRender(
+                          image: widget.image.image,
+                          onImageTap: (Color color) {
+                            widget.image.setBackgroundColor(color: color);
+                            widget.image.process();
+                            setState(() {});
+                          },
                         );
                       } else {
                         return const Center(

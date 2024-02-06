@@ -17,6 +17,7 @@ class ImportProcessingImage {
   bool cached = false;
   Future<Image>? processImage;
   Image? processedImage;
+  Uint8List? encoded;
 
   ImportProcessingImage({
     required this.image,
@@ -143,6 +144,8 @@ class ImportProcessingImage {
           numChannels: 4,
           order: ChannelOrder.rgba,
         );
+
+        encoded = encodePng(image);
 
         return processedImage!;
       },
