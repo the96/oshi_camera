@@ -22,7 +22,9 @@ class CameraState extends ConsumerState<Camera> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
       child: FutureBuilder<void>(
         future: ref.watch(cameraProvider.future),
         builder: (context, snapshot) {

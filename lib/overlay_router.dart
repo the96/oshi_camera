@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image/image.dart' as img;
 import 'package:oshi_camera/controller/camera.dart';
 import 'package:oshi_camera/model/overlay_controller.dart';
-import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
-import 'package:oshi_camera/view/component/image_trim_dialog.dart';
+import 'package:oshi_camera/view/component/image_import_dialog/image_transparentize_dialog.dart';
+import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
 
 class OverlayRouter extends ConsumerWidget {
   const OverlayRouter({super.key});
@@ -39,7 +40,9 @@ class OverlayRouter extends ConsumerWidget {
       case appRoute:
         return const AppController();
       case imageTrimDialogRoute:
-        return ImageTrimDialog(image: args['image'] as ImportProcessingImage);
+        return ImageTrimDialog(image: args['image'] as img.Image);
+      case imageTransparentizeDialogRoute:
+        return const ImageTransparentizeDialog();
       case '/':
         return defaultWidget();
       default:
@@ -64,6 +67,27 @@ class OverlayRouter extends ConsumerWidget {
     ref.read(overlayRouterProvider.notifier).state = pushed;
 
     if (current?.isCameraView != pushed.top?.isCameraView) {
+      ref.read(cameraProvider).value!.controller.pausePreview().then((_) {});
+    }
+  }
+
+  static void replace({
+    required String routeName,
+    required WidgetRef ref,
+    Map<String, Object> args = const {},
+  }) {
+    final stack = ref.read(overlayRouterProvider);
+    final current = stack.top;
+
+    final replaced = stack.replace(
+      CameraOverlayController(
+        routeName: routeName,
+        widget: routing(routeName, args),
+      ),
+    );
+    ref.read(overlayRouterProvider.notifier).state = replaced;
+
+    if (current?.isCameraView != replaced.top?.isCameraView) {
       ref.read(cameraProvider).value!.controller.pausePreview().then((_) {});
     }
   }

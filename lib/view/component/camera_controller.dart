@@ -38,38 +38,41 @@ class _CameraControllerState extends ConsumerState<CameraController> {
             alignment: Alignment.bottomCenter,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             color: Colors.black45.withOpacity(0.2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () => widget.pressOptions(ref),
-                  iconSize: 32,
-                  icon: const Icon(Icons.apps),
-                  color: Colors.white,
-                ),
-                IconButton(
-                  onPressed: canShutter
-                      ? () {
-                          setState(() => enableShutterButton = false);
-                          widget.pressShutter(ref).then(
-                            (_) {
-                              setState(() => enableShutterButton = true);
-                            },
-                          );
-                        }
-                      : null,
-                  iconSize: 48,
-                  icon: const Icon(Icons.camera),
-                  color: Colors.white,
-                ),
-                IconButton(
-                  onPressed: () =>
-                      widget.pressSwitchCamera(ref).then((_) => {}),
-                  iconSize: 32,
-                  icon: const Icon(Icons.cameraswitch_outlined),
-                  color: Colors.white,
-                ),
-              ],
+            child: SafeArea(
+              top: false,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: () => widget.pressOptions(ref),
+                    iconSize: 32,
+                    icon: const Icon(Icons.apps),
+                    color: Colors.white,
+                  ),
+                  IconButton(
+                    onPressed: canShutter
+                        ? () {
+                            setState(() => enableShutterButton = false);
+                            widget.pressShutter(ref).then(
+                              (_) {
+                                setState(() => enableShutterButton = true);
+                              },
+                            );
+                          }
+                        : null,
+                    iconSize: 48,
+                    icon: const Icon(Icons.camera),
+                    color: Colors.white,
+                  ),
+                  IconButton(
+                    onPressed: () =>
+                        widget.pressSwitchCamera(ref).then((_) => {}),
+                    iconSize: 32,
+                    icon: const Icon(Icons.cameraswitch_outlined),
+                    color: Colors.white,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

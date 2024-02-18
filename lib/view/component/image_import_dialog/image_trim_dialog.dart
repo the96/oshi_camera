@@ -3,13 +3,17 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image/image.dart' as img;
+import 'package:oshi_camera/model/image_import_dialog/crop_setting.dart';
 import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
+import 'package:oshi_camera/provider/image_import_dialog/process_image.dart';
+import 'package:oshi_camera/view/component/image_import_dialog/image_transparentize_dialog.dart';
 
-const imageTrimDialogRoute = '/image/edit';
+const imageTrimDialogRoute = '/image/trim';
 
 class ImageTrimDialog extends ConsumerStatefulWidget {
-  final ImportProcessingImage image;
+  final img.Image image;
 
   const ImageTrimDialog({
     required this.image,
@@ -32,7 +36,17 @@ class _ImageTrimDialogState extends ConsumerState<ImageTrimDialog> {
   double get radius => screenSize.width / 2;
 
   double convertPreviewCordinate(double n) {
-    return n * screenSize.width / widget.image.image.width;
+    return n * screenSize.width / widget.image.width;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    png = img.encodePng(widget.image);
+    rightBottom =
+        Point(widget.image.width.toDouble(), widget.image.height.toDouble());
+    setState(() {});
   }
 
   List<Widget> get previewMarker {
@@ -101,21 +115,6 @@ class _ImageTrimDialogState extends ConsumerState<ImageTrimDialog> {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    widget.image.process();
-    widget.image.processImage!.then((image) {
-      png = widget.image.encoded;
-      rightBottom = Point(
-        widget.image.image.width.toDouble(),
-        widget.image.image.height.toDouble(),
-      );
-      setState(() {});
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (png == null) {
       return Center(child: Container(color: Colors.white));
@@ -123,120 +122,133 @@ class _ImageTrimDialogState extends ConsumerState<ImageTrimDialog> {
     screenSize = MediaQuery.of(context).size;
 
     return Material(
-      child: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    constraints: BoxConstraints(
-                      maxHeight: screenSize.height - 300,
-                    ),
-                    child: GestureDetector(
-                      onPanStart: (d) => setState(() => visibleLupeView = true),
-                      onPanEnd: (d) => setState(() => visibleLupeView = false),
-                      onPanUpdate: (details) {
-                        setState(() {
-                          final imageWidth = widget.image.image.width;
-                          final imageHeight = widget.image.image.height;
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      constraints: BoxConstraints(
+                        maxHeight: screenSize.height - 300,
+                      ),
+                      child: GestureDetector(
+                        onPanStart: (d) =>
+                            setState(() => visibleLupeView = true),
+                        onPanEnd: (d) =>
+                            setState(() => visibleLupeView = false),
+                        onPanUpdate: (details) {
+                          setState(() {
+                            final imageWidth = widget.image.width;
+                            final imageHeight = widget.image.height;
 
-                          final dx = x - details.delta.dx * 2;
-                          final dy = y - details.delta.dy * 2;
-                          if (0 <= dx && dx <= imageWidth + 1) x = dx;
-                          if (0 <= dy && dy <= imageHeight + 1) y = dy;
-                        });
-                      },
-                      child: Image.memory(
-                        png!,
-                        fit: BoxFit.contain,
+                            final dx = x - details.delta.dx * 2;
+                            final dy = y - details.delta.dy * 2;
+                            if (0 <= dx && dx <= imageWidth + 1) x = dx;
+                            if (0 <= dy && dy <= imageHeight + 1) y = dy;
+                          });
+                        },
+                        child: Image.memory(
+                          png!,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
-                  ),
-                  ...previewMarker,
-                ],
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        const Text('左端'),
-                        ElevatedButton(
-                          onPressed: () => setState(
-                            () => leftTop = Point(x.toInt(), leftTop.y),
-                          ),
-                          child: const Text('決定'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        const Text('右端'),
-                        ElevatedButton(
-                          onPressed: () => setState(
-                            () => rightBottom = Point(x.toInt(), rightBottom.y),
-                          ),
-                          child: const Text('決定'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        const Text('上端'),
-                        ElevatedButton(
-                          onPressed: () => setState(
-                            () => leftTop = Point(leftTop.x, y.toInt()),
-                          ),
-                          child: const Text('決定'),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        const Text('下端'),
-                        ElevatedButton(
-                          onPressed: () => setState(
-                            () => rightBottom = Point(rightBottom.x, y.toInt()),
-                          ),
-                          child: const Text('決定'),
-                        ),
-                      ],
-                    )
+                    ...previewMarker,
                   ],
                 ),
-              ),
-            ],
-          ),
-          Positioned(
-            bottom: 0,
-            width: screenSize.width,
-            child: Container(
-              alignment: Alignment.center,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: ElevatedButton(
-                onPressed: () {
-                  OverlayRouter.pop(ref);
-                },
-                child: const Text('次へ'),
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          const Text('左端'),
+                          ElevatedButton(
+                            onPressed: () => setState(
+                              () => leftTop = Point(x.toInt(), leftTop.y),
+                            ),
+                            child: const Text('決定'),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          const Text('右端'),
+                          ElevatedButton(
+                            onPressed: () => setState(
+                              () =>
+                                  rightBottom = Point(x.toInt(), rightBottom.y),
+                            ),
+                            child: const Text('決定'),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          const Text('上端'),
+                          ElevatedButton(
+                            onPressed: () => setState(
+                              () => leftTop = Point(leftTop.x, y.toInt()),
+                            ),
+                            child: const Text('決定'),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          const Text('下端'),
+                          ElevatedButton(
+                            onPressed: () => setState(
+                              () =>
+                                  rightBottom = Point(rightBottom.x, y.toInt()),
+                            ),
+                            child: const Text('決定'),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 0,
+              width: screenSize.width,
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref.read(originalImageProvider.notifier).state =
+                        widget.image;
+                    ref.read(cropSettingProvider.notifier).state =
+                        CropSetting.fromPoint(start: leftTop, end: rightBottom);
+                    OverlayRouter.replace(
+                      routeName: imageTransparentizeDialogRoute,
+                      ref: ref,
+                    );
+                  },
+                  child: const Text('次へ'),
+                ),
               ),
             ),
-          ),
-          if (visibleLupeView)
-            Center(
-              child: LupeView(
-                x: x,
-                y: y,
-                radius: radius,
-                png: png!,
-                leftTop: leftTop,
-                rightBottom: rightBottom,
+            if (visibleLupeView)
+              Center(
+                child: LupeView(
+                  x: x,
+                  y: y,
+                  radius: radius,
+                  png: png!,
+                  leftTop: leftTop,
+                  rightBottom: rightBottom,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

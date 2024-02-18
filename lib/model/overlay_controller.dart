@@ -25,6 +25,12 @@ class CameraOverlayControllerStack {
     return CameraOverlayControllerStack(stack);
   }
 
+  CameraOverlayControllerStack replace(CameraOverlayController state) {
+    stack.removeLast();
+    stack.add(state);
+    return CameraOverlayControllerStack(stack);
+  }
+
   CameraOverlayControllerStack pop() {
     stack.removeLast();
     return CameraOverlayControllerStack(stack);
