@@ -51,5 +51,7 @@
 	<string>required by camera library</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>saving image</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>required by image picker</string>
 </dict>
 </plist>

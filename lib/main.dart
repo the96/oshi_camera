@@ -19,7 +19,7 @@ class OshiCamera extends ConsumerWidget {
     return MaterialApp(
       title: 'Oshi Camera',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
       initialRoute: '/',
