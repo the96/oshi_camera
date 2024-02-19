@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:oshi_camera/model/image_import_dialog/crop_setting.dart';
-import 'package:oshi_camera/model/import_processing_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/image_import_dialog/process_image.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_transparentize_dialog.dart';
