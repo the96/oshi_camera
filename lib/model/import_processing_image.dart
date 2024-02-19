@@ -66,23 +66,6 @@ class ImageProcessor {
         if (isBack(r, g, b, setting)) {
           final alphaDest = dest + 3;
           processed[alphaDest] = 0;
-
-          // 近傍ピクセルを透過する
-          const d = 0;
-          if (d == 0) continue;
-
-          const dlen = d * 2 + 1;
-          for (var dx = 0; dx < dlen; dx++) {
-            for (var dy = 0; dy < dlen; dy++) {
-              final nx = x + dx - d;
-              final ny = y + dy - d;
-              if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
-                continue;
-              }
-              final nDest = ny * width * 4 + nx * 4;
-              processed[nDest + 3] = 0;
-            }
-          }
         } else {
           processed[dest + 3] = 255;
         }
