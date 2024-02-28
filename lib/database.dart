@@ -1,25 +1,31 @@
-import 'package:oshi_camera/schema.dart';
+import 'package:oshi_camera/db/processed_image.dart';
 import 'package:sqflite/sqflite.dart';
 
-const String databaseName = 'oshi_camera.db';
-late Database db;
+class DatabaseHandler {
+  static const String databaseName = 'oshi_camera.db';
+  static DatabaseHandler? _instance;
+  late Database db;
 
-Future<Database> initDatabase() async {
-  print('initDatabase');
+  factory DatabaseHandler() {
+    _instance ??= DatabaseHandler._internal();
+    return _instance!;
+  }
 
-  await deleteDatabase(databaseName);
+  DatabaseHandler._internal();
 
-  db = await openDatabase(
-    databaseName,
-    version: 1,
-    onCreate: (db, version) async {
-      await Future.wait(
-        schema.map((table) async {
-          db.execute(table);
-        }),
-      );
-    },
-  );
+  Future<void> init() async {
+    final schema = [ProcessedImageProvider.create];
 
-  return db;
+    db = await openDatabase(
+      databaseName,
+      version: 1,
+      onCreate: (db, version) async {
+        await Future.wait(
+          schema.map((table) async {
+            db.execute(table);
+          }),
+        );
+      },
+    );
+  }
 }
