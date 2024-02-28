@@ -4,6 +4,7 @@ import 'package:oshi_camera/controller/image_processing.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
+import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
 const appRoute = '/apps';
 
@@ -64,7 +65,12 @@ class _AppControllerState extends ConsumerState<AppController> {
                   color: Colors.white,
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    OverlayRouter.push(
+                      ref: ref,
+                      routeName: processedImageViewerRoute,
+                    );
+                  },
                   iconSize: 32,
                   icon: const Icon(Icons.apps),
                   color: Colors.white,

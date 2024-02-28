@@ -9,6 +9,7 @@ import 'package:oshi_camera/view/component/app_controller.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_transparentize_dialog.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
+import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
 class OverlayRouter extends ConsumerWidget {
   const OverlayRouter({super.key});
@@ -43,6 +44,8 @@ class OverlayRouter extends ConsumerWidget {
         return ImageTrimDialog(image: args['image'] as img.Image);
       case imageTransparentizeDialogRoute:
         return const ImageTransparentizeDialog();
+      case processedImageViewerRoute:
+        return const ProcessedImageViewer();
       case '/':
         return defaultWidget();
       default:
