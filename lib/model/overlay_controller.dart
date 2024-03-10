@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
+import 'package:oshi_camera/view/component/app_controller/confirm_dialog.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
 
 class CameraOverlayController {
@@ -13,7 +14,8 @@ class CameraOverlayController {
     this.args = const {},
   });
 
-  bool get isCameraView => [rootRoute, appRoute].contains(routeName);
+  bool get isCameraView =>
+      [rootRoute, appRoute, deleteConfirmDialogRoute].contains(routeName);
 }
 
 class CameraOverlayControllerStack {
@@ -34,6 +36,11 @@ class CameraOverlayControllerStack {
   CameraOverlayControllerStack pop() {
     stack.removeLast();
     return CameraOverlayControllerStack(stack);
+  }
+
+  void printStack() {
+    var str = stack.map((e) => e.routeName).join("\n");
+    print(str);
   }
 
   CameraOverlayController? get top => stack.lastOrNull;

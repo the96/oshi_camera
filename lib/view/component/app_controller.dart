@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/controller/image_import.dart';
 import 'package:oshi_camera/overlay_router.dart';
-import 'package:oshi_camera/provider/overlay_images.dart';
+import 'package:oshi_camera/view/component/app_controller/confirm_dialog.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
 import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
@@ -48,7 +48,7 @@ class _AppControllerState extends ConsumerState<AppController> {
                               return;
                             }
 
-                            OverlayRouter.push(
+                            OverlayRouter.replace(
                               ref: ref,
                               routeName: imageTrimDialogRoute,
                               args: {'image': value},
@@ -73,7 +73,10 @@ class _AppControllerState extends ConsumerState<AppController> {
                 ),
                 IconButton(
                   onPressed: () {
-                    ref.read(overlayImagesProvider.notifier).state = [];
+                    OverlayRouter.push(
+                      routeName: deleteConfirmDialogRoute,
+                      ref: ref,
+                    );
                   },
                   iconSize: 32,
                   icon: const Icon(Icons.layers_clear_outlined),
