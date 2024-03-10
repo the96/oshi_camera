@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:oshi_camera/db/processed_image.dart';
+import 'package:oshi_camera/main.dart';
 import 'package:oshi_camera/model/image_import_dialog/chroma_setting.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/image_import_dialog/process_image.dart';
@@ -39,6 +42,8 @@ class _ImageTransparentizeDialogState
     final ratio =
         cropSetting != null ? cropSetting.width / cropSetting.height : 0.0;
 
+    final screenSize = MediaQuery.of(context).size;
+
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -47,6 +52,13 @@ class _ImageTransparentizeDialogState
           children: [
             Column(
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => OverlayRouter.pop(ref),
+                  ),
+                ),
                 loaded
                     ? ImportImageRender(
                         image: processedImage!,
@@ -100,19 +112,38 @@ class _ImageTransparentizeDialogState
                     }),
                   ),
                 ),
-                ElevatedButton(
+              ],
+            ),
+            Positioned(
+              bottom: 0,
+              width: screenSize.width,
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton(
                   child: const Text('確定'),
                   onPressed: () {
                     final images = ref.read(overlayImagesProvider);
+
+                    final formatter = DateFormat('yyyyMMdd_HHmmss');
+                    final now = DateTime.now();
+                    ProcessedImageProvider.insert(
+                      handler.db,
+                      ProcessedImage.create(
+                        formatter.format(now),
+                        processedBytes!,
+                      ),
+                    );
+
                     final added = [
                       ...images,
-                      processedBytes!,
+                      processedBytes,
                     ];
                     ref.read(overlayImagesProvider.notifier).state = added;
                     OverlayRouter.pop(ref);
                   },
                 ),
-              ],
+              ),
             ),
           ],
         ),

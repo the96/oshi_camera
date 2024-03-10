@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:oshi_camera/controller/image_processing.dart';
+import 'package:oshi_camera/controller/image_import.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
+import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
 const appRoute = '/apps';
 
@@ -43,6 +44,10 @@ class _AppControllerState extends ConsumerState<AppController> {
                   onPressed: enableChooseImageButton
                       ? () {
                           pickImage(ref).then((value) {
+                            if (value == null) {
+                              return;
+                            }
+
                             OverlayRouter.push(
                               ref: ref,
                               routeName: imageTrimDialogRoute,
@@ -57,16 +62,21 @@ class _AppControllerState extends ConsumerState<AppController> {
                 ),
                 IconButton(
                   onPressed: () {
+                    OverlayRouter.push(
+                      ref: ref,
+                      routeName: processedImageViewerRoute,
+                    );
+                  },
+                  iconSize: 32,
+                  icon: const Icon(Icons.photo_library_outlined),
+                  color: Colors.white,
+                ),
+                IconButton(
+                  onPressed: () {
                     ref.read(overlayImagesProvider.notifier).state = [];
                   },
                   iconSize: 32,
                   icon: const Icon(Icons.layers_clear_outlined),
-                  color: Colors.white,
-                ),
-                IconButton(
-                  onPressed: () {},
-                  iconSize: 32,
-                  icon: const Icon(Icons.apps),
                   color: Colors.white,
                 ),
               ],

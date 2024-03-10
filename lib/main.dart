@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/database.dart';
 import 'package:oshi_camera/view/camera.dart';
 
-void main() {
+late final DatabaseHandler handler;
+void main() async {
   runApp(
     const ProviderScope(
       child: OshiCamera(),
     ),
   );
+
+  handler = DatabaseHandler();
+  await handler.init();
 }
 
 class OshiCamera extends ConsumerWidget {

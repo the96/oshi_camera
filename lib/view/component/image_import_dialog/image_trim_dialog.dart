@@ -127,6 +127,13 @@ class _ImageTrimDialogState extends ConsumerState<ImageTrimDialog> {
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => OverlayRouter.pop(ref),
+                  ),
+                ),
                 Stack(
                   children: [
                     Container(
