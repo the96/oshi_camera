@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/db/processed_image.dart';
 import 'package:oshi_camera/main.dart';
+import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 
@@ -40,13 +41,16 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
       return Center(
         child: GestureDetector(
           onTap: () {
-            final images = ref.read(overlayImagesProvider);
-
-            final added = [
-              ...images,
-              e.bytes,
-            ];
-            ref.read(overlayImagesProvider.notifier).state = added;
+            ref.read(overlayImagesProvider.notifier).add(
+                  OverlayImage.create(
+                    x: 0,
+                    y: 0,
+                    width: e.width,
+                    height: e.height,
+                    angle: 0.0,
+                    image: e.bytes,
+                  ),
+                );
             OverlayRouter.pop(ref);
           },
           child: image,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:oshi_camera/db/processed_image.dart';
 import 'package:oshi_camera/main.dart';
 import 'package:oshi_camera/model/image_import_dialog/chroma_setting.dart';
+import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/image_import_dialog/process_image.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
@@ -123,8 +124,6 @@ class _ImageTransparentizeDialogState
                 child: ElevatedButton(
                   child: const Text('確定'),
                   onPressed: () {
-                    final images = ref.read(overlayImagesProvider);
-
                     final formatter = DateFormat('yyyyMMdd_HHmmss');
                     final now = DateTime.now();
                     ProcessedImageProvider.insert(
@@ -132,14 +131,21 @@ class _ImageTransparentizeDialogState
                       ProcessedImage.create(
                         formatter.format(now),
                         processedBytes!,
+                        processedImage!.width,
+                        processedImage.height,
                       ),
                     );
 
-                    final added = [
-                      ...images,
-                      processedBytes,
-                    ];
-                    ref.read(overlayImagesProvider.notifier).state = added;
+                    ref.read(overlayImagesProvider.notifier).add(
+                          OverlayImage.create(
+                            x: 0,
+                            y: 0,
+                            width: processedImage.width,
+                            height: processedImage.height,
+                            angle: 0.0,
+                            image: processedBytes,
+                          ),
+                        );
                     OverlayRouter.pop(ref);
                   },
                 ),

@@ -26,7 +26,7 @@ class DeleteConfirmDialog extends ConsumerWidget {
         ),
         TextButton(
           onPressed: () {
-            ref.read(overlayImagesProvider.notifier).state = [];
+            ref.read(overlayImagesProvider.notifier).clear();
             OverlayRouter.pop(ref);
           },
           child: const Text('削除'),

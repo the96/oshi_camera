@@ -13,6 +13,9 @@ class Camera extends ConsumerStatefulWidget {
 }
 
 class CameraState extends ConsumerState<Camera> {
+  Offset? offset;
+  double? scale;
+
   @override
   void initState() {
     super.initState();
@@ -22,7 +25,7 @@ class CameraState extends ConsumerState<Camera> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: FutureBuilder<void>(
@@ -37,7 +40,37 @@ class CameraState extends ConsumerState<Camera> {
             return CameraPreview(
               ref.watch(cameraProvider).value!.controller,
               child: Stack(fit: StackFit.expand, children: [
-                for (final image in overlayImages) Image.memory(image),
+                for (final overlayImage in overlayImages)
+                  Positioned(
+                    left: overlayImage.x,
+                    top: overlayImage.y,
+                    width: overlayImage.width * overlayImage.scale,
+                    height: overlayImage.height * overlayImage.scale,
+                    child: GestureDetector(
+                      onLongPress: () {
+                        offset = Offset(
+                          overlayImage.x,
+                          overlayImage.y,
+                        );
+                        scale = overlayImage.scale;
+                      },
+                      onLongPressMoveUpdate: (details) {
+                        overlayImage.x =
+                            offset!.dx + details.offsetFromOrigin.dx;
+                        overlayImage.y =
+                            offset!.dy + details.offsetFromOrigin.dy;
+                        ref.read(overlayImagesProvider.notifier).update();
+                      },
+                      onScaleStart: (details) {
+                        scale = overlayImage.scale;
+                      },
+                      onScaleUpdate: (details) {
+                        overlayImage.scale = scale! * details.scale;
+                        ref.read(overlayImagesProvider.notifier).update();
+                      },
+                      child: Image.memory(overlayImage.image),
+                    ),
+                  ),
                 const OverlayRouter(),
               ]),
             );

@@ -6,7 +6,7 @@ import 'package:oshi_camera/model/overlay_controller.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller.dart';
-import 'package:oshi_camera/view/component/app_controller/confirm_dialog.dart';
+import 'package:oshi_camera/view/component/app_controller/delete_confirm_dialog.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_transparentize_dialog.dart';
 import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';

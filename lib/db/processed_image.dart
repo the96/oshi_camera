@@ -6,21 +6,29 @@ class ProcessedImage {
   int id;
   String name;
   Uint8List bytes;
+  int width;
+  int height;
   DateTime createdAt;
 
   ProcessedImage({
     required this.id,
     required this.name,
     required this.bytes,
+    required this.width,
+    required this.height,
     required this.createdAt,
   });
 
   ProcessedImage.create(
     String _name,
     Uint8List _bytes,
+    int _width,
+    int _height,
   )   : id = 0,
         name = _name,
         bytes = _bytes,
+        width = _width,
+        height = _height,
         createdAt = DateTime.now();
 
   ProcessedImage.fromMap(
@@ -28,6 +36,8 @@ class ProcessedImage {
   )   : id = map['id'] as int,
         name = map['name'] as String,
         bytes = map['bytes'] as Uint8List,
+        width = map['width'] as int,
+        height = map['height'] as int,
         createdAt = DateTime.parse(map['createdAt'] as String).toLocal();
 
   Map<String, Object?> toMap() {
@@ -35,6 +45,8 @@ class ProcessedImage {
       'id': id,
       'name': name,
       'bytes': bytes,
+      'width': width,
+      'height': height,
       'createdAt': createdAt.toUtc().toIso8601String(),
     };
   }
@@ -47,6 +59,8 @@ CREATE TABLE $TABLE_NAME (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     bytes BLOB NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
     createdAt TEXT NOT NULL
 );
 """;
