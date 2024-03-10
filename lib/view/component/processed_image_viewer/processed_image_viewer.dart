@@ -104,23 +104,7 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
 
   @override
   Widget build(BuildContext context) {
-    final testProcessedImages = [
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages,
-      ...processedImages
-    ];
-
-    final thumbnails = testProcessedImages
+    final thumbnails = processedImages
         .map(
           (e) => Container(
             decoration: BoxDecoration(
