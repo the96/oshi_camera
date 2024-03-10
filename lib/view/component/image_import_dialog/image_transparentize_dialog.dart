@@ -42,6 +42,8 @@ class _ImageTransparentizeDialogState
     final ratio =
         cropSetting != null ? cropSetting.width / cropSetting.height : 0.0;
 
+    final screenSize = MediaQuery.of(context).size;
+
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -50,6 +52,13 @@ class _ImageTransparentizeDialogState
           children: [
             Column(
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => OverlayRouter.pop(ref),
+                  ),
+                ),
                 loaded
                     ? ImportImageRender(
                         image: processedImage!,
@@ -103,7 +112,15 @@ class _ImageTransparentizeDialogState
                     }),
                   ),
                 ),
-                ElevatedButton(
+              ],
+            ),
+            Positioned(
+              bottom: 0,
+              width: screenSize.width,
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ElevatedButton(
                   child: const Text('確定'),
                   onPressed: () {
                     final images = ref.read(overlayImagesProvider);
@@ -126,7 +143,7 @@ class _ImageTransparentizeDialogState
                     OverlayRouter.pop(ref);
                   },
                 ),
-              ],
+              ),
             ),
           ],
         ),
