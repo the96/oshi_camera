@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
+import 'package:oshi_camera/provider/overlay_router.dart';
 
 class Camera extends ConsumerStatefulWidget {
   const Camera({Key? key}) : super(key: key);
@@ -25,6 +26,9 @@ class CameraState extends ConsumerState<Camera> {
 
   @override
   Widget build(BuildContext context) {
+    final isCameraView =
+        ref.watch(overlayRouterProvider).top?.isCameraView ?? false;
+
     return SizedBox(
       width: double.infinity,
       height: double.infinity,
@@ -46,30 +50,32 @@ class CameraState extends ConsumerState<Camera> {
                     top: overlayImage.y,
                     width: overlayImage.width * overlayImage.scale,
                     height: overlayImage.height * overlayImage.scale,
-                    child: GestureDetector(
-                      onLongPress: () {
-                        offset = Offset(
-                          overlayImage.x,
-                          overlayImage.y,
-                        );
-                        scale = overlayImage.scale;
-                      },
-                      onLongPressMoveUpdate: (details) {
-                        overlayImage.x =
-                            offset!.dx + details.offsetFromOrigin.dx;
-                        overlayImage.y =
-                            offset!.dy + details.offsetFromOrigin.dy;
-                        ref.read(overlayImagesProvider.notifier).update();
-                      },
-                      onScaleStart: (details) {
-                        scale = overlayImage.scale;
-                      },
-                      onScaleUpdate: (details) {
-                        overlayImage.scale = scale! * details.scale;
-                        ref.read(overlayImagesProvider.notifier).update();
-                      },
-                      child: Image.memory(overlayImage.image),
-                    ),
+                    child: isCameraView
+                        ? GestureDetector(
+                            onLongPress: () {
+                              offset = Offset(
+                                overlayImage.x,
+                                overlayImage.y,
+                              );
+                              scale = overlayImage.scale;
+                            },
+                            onLongPressMoveUpdate: (details) {
+                              overlayImage.x =
+                                  offset!.dx + details.offsetFromOrigin.dx;
+                              overlayImage.y =
+                                  offset!.dy + details.offsetFromOrigin.dy;
+                              ref.read(overlayImagesProvider.notifier).update();
+                            },
+                            onScaleStart: (details) {
+                              scale = overlayImage.scale;
+                            },
+                            onScaleUpdate: (details) {
+                              overlayImage.scale = scale! * details.scale;
+                              ref.read(overlayImagesProvider.notifier).update();
+                            },
+                            child: Image.memory(overlayImage.image),
+                          )
+                        : Image.memory(overlayImage.image),
                   ),
                 const OverlayRouter(),
               ]),

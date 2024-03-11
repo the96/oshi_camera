@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/controller/image_import.dart';
 import 'package:oshi_camera/db/processed_image.dart';
 import 'package:oshi_camera/main.dart';
 import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
+import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
 
 const processedImageViewerRoute = '/processed/image/viewer';
 
@@ -38,21 +40,24 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
     final image = Image.memory(e.bytes, fit: BoxFit.contain);
 
     if (mode == ProcessedImageViewerMode.view) {
-      return Center(
-        child: GestureDetector(
-          onTap: () {
-            ref.read(overlayImagesProvider.notifier).add(
-                  OverlayImage.create(
-                    x: 0,
-                    y: 0,
-                    width: e.width,
-                    height: e.height,
-                    angle: 0.0,
-                    image: e.bytes,
-                  ),
-                );
-            OverlayRouter.pop(ref);
-          },
+      return TextButton(
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: () {
+          ref.read(overlayImagesProvider.notifier).add(
+                OverlayImage.create(
+                  x: 0,
+                  y: 0,
+                  width: e.width,
+                  height: e.height,
+                  angle: 0.0,
+                  image: e.bytes,
+                ),
+              );
+          OverlayRouter.pop(ref);
+        },
+        child: Center(
           child: image,
         ),
       );
@@ -76,6 +81,39 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
         ],
       );
     }
+  }
+
+  Widget openImportImage() {
+    return TextButton(
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+      ),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          border: Border.all(color: Colors.black),
+        ),
+        child: const Icon(
+          Icons.add,
+          size: 48,
+        ),
+      ),
+      onPressed: () {
+        pickImage(ref).then(
+          (value) {
+            if (value == null) {
+              return;
+            }
+            OverlayRouter.replace(
+              routeName: imageTrimDialogRoute,
+              ref: ref,
+              args: {'image': value},
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget buildHeaderButtons() {
@@ -112,7 +150,7 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
         .map(
           (e) => Container(
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 187, 187, 187),
+              color: Colors.grey[200],
               border: Border.all(color: Colors.black),
             ),
             child: buildThumbnail(e),
@@ -122,10 +160,10 @@ class _ProcessedImageViewerState extends ConsumerState<ProcessedImageViewer> {
 
     final thumbnailGridView = Padding(
       padding: const EdgeInsets.only(top: 52),
-      child: GridView.count(
-        crossAxisCount: 3,
-        children: thumbnails,
-      ),
+      child: GridView.count(crossAxisCount: 3, children: [
+        openImportImage(),
+        ...thumbnails,
+      ]),
     );
 
     final buttons = Positioned(

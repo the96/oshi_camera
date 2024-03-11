@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:oshi_camera/controller/image_import.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller/delete_confirm_dialog.dart';
-import 'package:oshi_camera/view/component/image_import_dialog/image_trim_dialog.dart';
 import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
 const appRoute = '/apps';
@@ -41,26 +39,6 @@ class _AppControllerState extends ConsumerState<AppController> {
                   color: Colors.white,
                 ),
                 IconButton(
-                  onPressed: enableChooseImageButton
-                      ? () {
-                          pickImage(ref).then((value) {
-                            if (value == null) {
-                              return;
-                            }
-
-                            OverlayRouter.replace(
-                              ref: ref,
-                              routeName: imageTrimDialogRoute,
-                              args: {'image': value},
-                            );
-                          });
-                        }
-                      : null,
-                  iconSize: 32,
-                  icon: const Icon(Icons.photo_outlined),
-                  color: Colors.white,
-                ),
-                IconButton(
                   onPressed: () {
                     OverlayRouter.push(
                       ref: ref,
@@ -68,7 +46,7 @@ class _AppControllerState extends ConsumerState<AppController> {
                     );
                   },
                   iconSize: 32,
-                  icon: const Icon(Icons.folder_open_outlined),
+                  icon: const Icon(Icons.image_outlined),
                   color: Colors.white,
                 ),
                 IconButton(
