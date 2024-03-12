@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
@@ -24,6 +25,48 @@ class CameraState extends ConsumerState<Camera> {
     ref.read(cameraDescriptionsProvider.notifier).load();
   }
 
+  void onScaleStart(ScaleStartDetails details, OverlayImage overlayImage) {
+    scale = overlayImage.scale;
+    offset = Offset(
+      overlayImage.x,
+      overlayImage.y,
+    );
+    scale = overlayImage.scale;
+  }
+
+  void onScaleUpdate(ScaleUpdateDetails details, OverlayImage overlayImage) {
+    if (details.pointerCount == 1) {
+      overlayImage.x += details.focalPointDelta.dx;
+      overlayImage.y += details.focalPointDelta.dy;
+    } else if (details.pointerCount == 2) {
+      final prevWidth = overlayImage.width * overlayImage.scale;
+      final prevHeight = overlayImage.height * overlayImage.scale;
+
+      overlayImage.scale = scale! * details.scale;
+      final width = overlayImage.width * overlayImage.scale;
+      final height = overlayImage.height * overlayImage.scale;
+      overlayImage.x -= (width - prevWidth) / 2;
+      overlayImage.y -= (height - prevHeight) / 2;
+    }
+    ref.read(overlayImagesProvider.notifier).update();
+  }
+
+  Widget buildOverlayImageWidget(OverlayImage overlayImage, bool isCameraView) {
+    return Positioned(
+      left: overlayImage.x,
+      top: overlayImage.y,
+      width: overlayImage.width * overlayImage.scale,
+      height: overlayImage.height * overlayImage.scale,
+      child: isCameraView
+          ? GestureDetector(
+              onScaleStart: (details) => onScaleStart(details, overlayImage),
+              onScaleUpdate: (details) => onScaleUpdate(details, overlayImage),
+              child: Image.memory(overlayImage.image),
+            )
+          : Image.memory(overlayImage.image),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isCameraView =
@@ -41,42 +84,17 @@ class CameraState extends ConsumerState<Camera> {
           if (snapshot.connectionState == ConnectionState.done &&
               camera != null &&
               camera.isInitialized) {
+            final overlayImageWidgets = overlayImages
+                .map(
+                  (overlayImage) =>
+                      buildOverlayImageWidget(overlayImage, isCameraView),
+                )
+                .toList();
+
             return CameraPreview(
               ref.watch(cameraProvider).value!.controller,
               child: Stack(fit: StackFit.expand, children: [
-                for (final overlayImage in overlayImages)
-                  Positioned(
-                    left: overlayImage.x,
-                    top: overlayImage.y,
-                    width: overlayImage.width * overlayImage.scale,
-                    height: overlayImage.height * overlayImage.scale,
-                    child: isCameraView
-                        ? GestureDetector(
-                            onLongPress: () {
-                              offset = Offset(
-                                overlayImage.x,
-                                overlayImage.y,
-                              );
-                              scale = overlayImage.scale;
-                            },
-                            onLongPressMoveUpdate: (details) {
-                              overlayImage.x =
-                                  offset!.dx + details.offsetFromOrigin.dx;
-                              overlayImage.y =
-                                  offset!.dy + details.offsetFromOrigin.dy;
-                              ref.read(overlayImagesProvider.notifier).update();
-                            },
-                            onScaleStart: (details) {
-                              scale = overlayImage.scale;
-                            },
-                            onScaleUpdate: (details) {
-                              overlayImage.scale = scale! * details.scale;
-                              ref.read(overlayImagesProvider.notifier).update();
-                            },
-                            child: Image.memory(overlayImage.image),
-                          )
-                        : Image.memory(overlayImage.image),
-                  ),
+                ...overlayImageWidgets,
                 const OverlayRouter(),
               ]),
             );
