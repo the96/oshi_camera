@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/view/component/app_controller/delete_confirm_dialog.dart';
+import 'package:oshi_camera/view/component/overlay_image_controller/overlay_image_controller.dart';
 import 'package:oshi_camera/view/component/processed_image_viewer/processed_image_viewer.dart';
 
 const appRoute = '/apps';
@@ -50,7 +51,12 @@ class _AppControllerState extends ConsumerState<AppController> {
                   color: Colors.white,
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    OverlayRouter.push(
+                      routeName: overlayImageControllerRoute,
+                      ref: ref,
+                    );
+                  },
                   iconSize: 32,
                   icon: const Icon(Icons.design_services_outlined),
                   color: Colors.white,

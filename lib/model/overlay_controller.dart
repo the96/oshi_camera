@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:oshi_camera/view/component/app_controller.dart';
+import 'package:oshi_camera/view/component/app_controller/app_controller.dart';
 import 'package:oshi_camera/view/component/app_controller/delete_confirm_dialog.dart';
 import 'package:oshi_camera/view/component/camera_controller.dart';
+import 'package:oshi_camera/view/component/overlay_image_controller/overlay_image_controller.dart';
 
 class CameraOverlayController {
   final String routeName;
@@ -18,6 +19,7 @@ class CameraOverlayController {
         rootRoute,
         appRoute,
         deleteConfirmDialogRoute,
+        overlayImageControllerRoute,
       ].contains(routeName);
 }
 

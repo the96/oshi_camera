@@ -69,8 +69,8 @@ class CameraState extends ConsumerState<Camera> {
 
   @override
   Widget build(BuildContext context) {
-    final isCameraView =
-        ref.watch(overlayRouterProvider).top?.isCameraView ?? false;
+    final isCameraView = ref.watch(overlayRouterProvider).top?.isCameraView ?? false;
+    final overlayImages = ref.watch(overlayImagesProvider);
 
     return SizedBox(
       width: double.infinity,
@@ -79,15 +79,11 @@ class CameraState extends ConsumerState<Camera> {
         future: ref.watch(cameraProvider.future),
         builder: (context, snapshot) {
           final camera = ref.watch(cameraProvider).value;
-          final overlayImages = ref.watch(overlayImagesProvider);
 
-          if (snapshot.connectionState == ConnectionState.done &&
-              camera != null &&
-              camera.isInitialized) {
+          if (snapshot.connectionState == ConnectionState.done && camera != null && camera.isInitialized) {
             final overlayImageWidgets = overlayImages
                 .map(
-                  (overlayImage) =>
-                      buildOverlayImageWidget(overlayImage, isCameraView),
+                  (overlayImage) => buildOverlayImageWidget(overlayImage, isCameraView),
                 )
                 .toList();
 
