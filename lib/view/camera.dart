@@ -6,6 +6,7 @@ import 'package:oshi_camera/overlay_router.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
+import 'package:oshi_camera/provider/view_size.dart';
 
 class Camera extends ConsumerStatefulWidget {
   const Camera({Key? key}) : super(key: key);
@@ -87,12 +88,34 @@ class CameraState extends ConsumerState<Camera> {
                 )
                 .toList();
 
-            return CameraPreview(
-              ref.watch(cameraProvider).value!.controller,
-              child: Stack(fit: StackFit.expand, children: [
-                ...overlayImageWidgets,
+            final width = MediaQuery.of(context).size.width;
+            final ratio = camera.controller.value.aspectRatio;
+            final height = width * ratio;
+            WidgetsBinding.instance!.addPostFrameCallback((_) {
+              ref.read(viewSizeProvider.notifier).state = Size(width, height);
+            });
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: width,
+                  height: height,
+                  child: AspectRatio(
+                    aspectRatio: ratio,
+                    child: CameraPreview(
+                      ref.watch(cameraProvider).value!.controller,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: overlayImageWidgets,
+                      ),
+                    ),
+                  ),
+                ),
                 const OverlayRouter(),
-              ]),
+              ],
             );
           } else {
             return const Center(child: CircularProgressIndicator());
