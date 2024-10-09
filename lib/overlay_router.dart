@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:intl/intl.dart';
 import 'package:oshi_camera/controller/camera.dart';
+import 'package:oshi_camera/controller/render_overlay_image.dart';
 import 'package:oshi_camera/model/overlay_controller.dart';
 import 'package:oshi_camera/provider/camera.dart';
 import 'package:oshi_camera/provider/overlay_router.dart';
@@ -30,7 +33,17 @@ class OverlayRouter extends ConsumerWidget {
   static Widget defaultWidget() {
     return CameraController(
       pressOptions: (WidgetRef ref) => push(routeName: appRoute, ref: ref),
-      pressShutter: takePicture,
+      pressShutter: (WidgetRef ref) async {
+        final image = await takePictureToImage(ref);
+        final size = Size(image!.width.toDouble(), image.height.toDouble());
+
+        final overlay = await renderOverlayImage(ref, size);
+
+        final compoundImage = img.compositeImage(image, overlay!);
+        final datestr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+        final filename = 'oshi_camera_$datestr.jpg';
+        await ImageGallerySaver.saveImage(img.encodeJpg(compoundImage, quality: 100), name: filename);
+      },
       pressSwitchCamera: switchCamera,
     );
   }

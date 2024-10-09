@@ -45,6 +45,7 @@ class CameraOverlayControllerStack {
 
   void printStack() {
     var str = stack.map((e) => e.routeName).join("\n");
+    // ignore: avoid_print
     print(str);
   }
 
