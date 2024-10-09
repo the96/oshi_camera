@@ -91,7 +91,7 @@ class CameraState extends ConsumerState<Camera> {
             final width = MediaQuery.of(context).size.width;
             final ratio = camera.controller.value.aspectRatio;
             final height = width * ratio;
-            WidgetsBinding.instance!.addPostFrameCallback((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               ref.read(viewSizeProvider.notifier).state = Size(width, height);
             });
 

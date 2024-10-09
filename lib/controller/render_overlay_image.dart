@@ -5,8 +5,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:intl/intl.dart';
 import 'package:oshi_camera/model/overlay_image.dart';
 import 'package:oshi_camera/provider/overlay_images.dart';
 import 'package:oshi_camera/provider/view_size.dart';
@@ -41,11 +39,11 @@ Future<img.Image?> renderOverlayImage(WidgetRef ref, Size size) async {
   final buildOwner = BuildOwner(focusManager: FocusManager());
 
   final viewSize = ref.read(viewSizeProvider);
-  print(viewSize);
 
   double scaleWidth = size.width / viewSize.width;
   double scaleHeight = size.height / viewSize.height;
-  if (scaleWidth != scaleHeight) {
+  if ((scaleWidth - scaleHeight).abs() > 0.01) {
+    // ignore: avoid_print
     print('WARNING: scaleWidth: $scaleWidth, scaleHeight: $scaleHeight');
   }
 
@@ -72,9 +70,6 @@ Future<img.Image?> renderOverlayImage(WidgetRef ref, Size size) async {
 
   final ui.Image widgetImage = await repaintBoundary.toImage();
   final ByteData? byteData = await widgetImage.toByteData(format: ui.ImageByteFormat.png);
-
-  final datestr = DateFormat('yyyy-MM-dd-HH-mm-ss').format(DateTime.now());
-  ImageGallerySaver.saveImage(byteData!.buffer.asUint8List(), name: '${datestr}_overlay');
 
   return img.decodeImage(byteData!.buffer.asUint8List());
 }
